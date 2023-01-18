@@ -1,42 +1,48 @@
 #!/usr/bin/python3
-"""Python script that reads stdin line by line and computes metrics"""
+"""
+a script that reads stdin line by line and computes metrics:
+Input format: <IP Address> - [<date>]
+"GET /projects/260 HTTP/1.1" <status code> <file size>
+"""
+from sys import stdin
 
-import sys
+status_codes = {
+    "200": 0,
+    "301": 0,
+    "400": 0,
+    "401": 0,
+    "403": 0,
+    "404": 0,
+    "405": 0,
+    "500": 0
+}
+
+file = 0
 
 
-def print_n(t_file_size, status):
-    """Prints total file size and status list"""
-    print("File size: {:d}".format(t_file_size))
-    for key, value in sorted(status.items()):
-        if value != 0:
-            print("{}: {}".format(key, value))
+def print_log():
+    """Prints the logs"""
+    print("File size: {}".format(file))
+    for stat in sorted(status_codes.keys()):
+        if status_codes[stat]:
+            print("{}: {}".format(stat, status_codes[stat]))
 
 
-status = {'200': 0, '301': 0, '400': 0, '401': 0,
-          '403': 0, '404': 0, '405': 0, '500': 0}
-
-t_file_size = 0
-count = 0
-try:
-    for line in sys.stdin:
-        args = line.split()
-
-        if len(args) > 2:
-            status_code = args[-2]
-            file_size = int(args[-1])
-
-            if status_code in status:
-                status[status_code] += 1
-
-            t_file_size += file_size
+if __name__ == "__main__":
+    count = 1
+    try:
+        for line in stdin:
+            try:
+                log = line.split()
+                if log[-2] in status_codes:
+                    status_codes[log[-2]] += 1
+                file += int(log[-1])
+            except Exception:
+                pass
+            if count % 10 == 0:
+                print_log()
             count += 1
-
-            if count == 10:
-                print_n(t_file_size, status)
-                count = 0
-
-except KeyboardInterrupt:
-    pass
-
-finally:
-    print_n(t_file_size, status)
+    except KeyboardInterrupt:
+        print_log()
+        raise
+    print_log()
